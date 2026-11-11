@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rotten Potatoes — Are you on the list?</title>
+<meta name="description" content="St. Louis creators, ranked by pure data. Type your handle to find out if you’re on the list.">
+<meta name="theme-color" content="#FF0000">
+<meta property="og:title" content="Are you on the list? — Rotten Potatoes">
+<meta property="og:description" content="St. Louis creators, ranked by pure data. Judge not, lest ye be judged.">
+<link rel="preload" href="assets/fonts/Geist-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face{font-family:Geist;font-weight:400;font-style:normal;font-display:swap;src:url("assets/fonts/Geist-Regular.woff2") format("woff2")}
+  @font-face{font-family:Geist;font-weight:500;font-style:normal;font-display:swap;src:url("assets/fonts/Geist-Medium.woff2") format("woff2")}
+
+  /* The app's tokens: page red from the marketing cards, screen red (#EE0000) from
+     Theme.swift, black ink, white paper, thin outlines, no shadows. */
+  :root{
+    --page:#FF0000; --red:#EE0000; --ink:#000; --paper:#fff; --muted:#707070;
+    --line:1.5px;
+    --soft:cubic-bezier(.22,1,.36,1);
+    --bouncy:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--page); color:var(--ink); overflow:hidden;
+    font:400 16px/1.3 Geist,-apple-system,system-ui,sans-serif; letter-spacing:-.01em;
+    -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
+  }
+  img{display:block}
+  button,input{font:inherit;color:inherit}
+  button{cursor:pointer}
+
+  /* ---------- Sky: the app's clouds, sailing slowly ---------- */
+  .sky{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+  .cloud,.sc{position:absolute; animation:sway var(--t,22s) ease-in-out var(--d,0s) infinite alternate}
+  .cloud img,.sc img{width:100%}
+  @keyframes sway{from{transform:translateX(calc(var(--a,5vw) * -1))} to{transform:translateX(var(--a,5vw))}}
+  .c1{width:34vw; left:-9vw;  top:-8svh;    --t:26s; --d:-7s}
+  .c2{width:10vw; right:12vw; top:14svh;    --t:18s; --d:-3s;  --a:3.5vw}
+  .c3{width:24vw; left:-8vw;  bottom:6svh;  --t:22s; --d:-12s}
+  .c4{width:28vw; right:-9vw; bottom:-6svh; --t:30s; --d:-16s}
+
+  /* ---------- Home: one centered prompt, Lovable-style ---------- */
+  .top{position:fixed; z-index:2; top:0; left:0; right:0; display:flex; justify-content:center;
+    padding:max(24px,env(safe-area-inset-top)) 16px 0; transition:opacity .35s}
+  .top img{height:30px; width:auto}
+
+  .hero{position:fixed; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:84px 16px 140px; transition:opacity .4s ease, transform .6s var(--soft)}
+  .tag{margin:0; background:var(--paper); border:var(--line) solid var(--ink); border-radius:99px; padding:5px 14px 6px; font-size:15px}
+  h1{margin:22px 0 0; font-weight:400; font-size:clamp(46px,7vw,104px); line-height:.88; letter-spacing:-.05em}
+
+  .prompt{margin-top:36px; width:min(640px,100%); text-align:left; background:var(--paper);
+    border:var(--line) solid var(--ink); border-radius:28px; padding:20px 14px 14px 22px; cursor:text}
+  .prompt:focus-within{outline:1px solid var(--ink)}
+  .prompt.nope{animation:nope .4s ease}
+  @keyframes nope{20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)}}
+  .field{display:flex; align-items:baseline; font-size:clamp(22px,2vw,26px); letter-spacing:-.03em}
+  .field .at{color:var(--muted)}
+  .field input{flex:1; min-width:0; border:0; outline:0; background:none; padding:0 0 0 2px; font-size:inherit; letter-spacing:inherit}
+  .field input::placeholder{color:#a8a8a8; opacity:1}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px}
+  .hint{display:flex; align-items:center; gap:9px; font-size:14px; color:var(--muted)}
+  .pair{display:flex}
+  .pair img{width:24px; height:24px}
+  .pair img+img{margin-left:-5px}
+  .go{flex:none; width:48px; height:48px; padding:0; border-radius:50%; background:var(--red); border:var(--line) solid var(--ink);
+    display:grid; place-items:center; transition:transform .3s var(--bouncy)}
+  .go img{height:17px; transform:rotate(90deg)}
+  .go:hover{transform:scale(1.06)}
+  .go:active{transform:scale(.88)}
+
+  /* Clean App Store badge, built to Apple's proportions. */
+  .store{display:inline-flex; align-items:center; gap:7px; height:48px; padding:0 17px 0 12px; margin-top:28px;
+    background:#000; color:#fff; border:1px solid #a6a6a6; border-radius:10px; text-decoration:none;
+    font-family:-apple-system,"SF Pro Display",system-ui,sans-serif; transition:transform .3s var(--bouncy)}
+  .store:active{transform:scale(.95)}
+  .store svg{width:25px; height:25px; margin-top:-3px}
+  .store span{display:flex; flex-direction:column; align-items:flex-start; line-height:1}
+  .store small{font-size:10.5px; letter-spacing:.01em}
+  .store b{font-size:21px; font-weight:600; letter-spacing:-.025em; margin-top:1px}
+
+  /* "A Social Experiment by" + the Dumpster Fire Industries logo, as on App Screen 6. */
+  .foot{position:fixed; z-index:1; left:0; right:0; bottom:max(16px,env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; align-items:center; gap:8px; transition:opacity .35s}
+  .by{margin:0; display:flex; align-items:center; gap:12px; font-size:17px; letter-spacing:-.03em; line-height:1}
+  .by a{display:block; transition:transform .3s var(--bouncy)}
+  .by a:hover{transform:rotate(-4deg) scale(1.05)}
+  .by img{height:46px; width:auto}
+  /* Privacy, terms and contact: the App Store's support page needs them. */
+  .links{display:flex; gap:18px; font-size:13px}
+  .links a{color:var(--ink); text-decoration:none}
+  .links a:hover{text-decoration:underline}
+  /* Until the app is live, download buttons say so instead of linking nowhere. */
+  .soon{cursor:default}
+  .store.soon:active,.claim.soon:active{transform:none !important}
+
+  body:not([data-stage="home"]) .hero{opacity:0; transform:translateY(-6svh); pointer-events:none}
+  body:not([data-stage="home"]) .top,
+  body:not([data-stage="home"]) .foot{opacity:0; pointer-events:none}
+
+  /* ---------- Result: the phone, and the copy beside it ---------- */
+  .result{position:fixed; inset:0; z-index:3; display:flex; align-items:center; justify-content:center;
+    gap:clamp(40px,6vw,96px); padding:24px 16px; overflow-y:auto; visibility:hidden; transition:visibility 0s linear .95s}
+  body:not([data-stage="home"]) .result{visibility:visible; transition:none}
+
+  /* Phone frame copied from App Screen 3: white body, double black outline, white notch
+     with a speaker slit, black island under it. */
+  .phone{--P:min(380px,calc((100svh - 48px) / 2.019)); position:relative; flex:none; width:var(--P); aspect-ratio:733/1480;
+    background:var(--paper); border:2.5px solid var(--ink); border-radius:calc(var(--P) * .135);
+    transform:translateY(115svh); transition:transform .95s var(--soft)}
+  body:not([data-stage="home"]) .phone{transform:none}
+  .phone::before{content:""; position:absolute; inset:calc(var(--P) * .0085); border:2.5px solid var(--ink);
+    border-radius:calc(var(--P) * .125); pointer-events:none}
+  .screen{position:absolute; inset:calc(var(--P) * .056); border:2px solid var(--ink); border-radius:calc(var(--P) * .085);
+    background:var(--red); overflow:hidden; container-type:inline-size; isolation:isolate}
+  .notch{position:absolute; z-index:20; top:-2px; left:50%; transform:translateX(-50%); width:56cqw; height:7.8cqw;
+    background:var(--paper); border:2px solid var(--ink); border-top:0; border-radius:0 0 4.5cqw 4.5cqw}
+  .notch::after{content:""; position:absolute; left:50%; top:1.4cqw; transform:translateX(-50%); width:13cqw; height:1.9cqw;
+    background:var(--paper); border:2px solid var(--ink); border-radius:99px}
+  .island{position:absolute; z-index:19; top:calc(7.8cqw - 4px); left:50%; transform:translateX(-50%); width:31cqw; height:4.2cqw;
+    background:var(--ink); border-radius:0 0 2.2cqw 2.2cqw}
+
+  /* The profile's own clouds (ProfileScreen.swift: artCloudLarge and artCloudSmall). */
+  .sc{pointer-events:none}
+  .sc.big{width:112cqw; left:-34cqw; top:-1cqw; z-index:1; --t:14s; --a:8cqw}
+  .sc.small{width:32.5cqw; left:84cqw; top:89cqw; z-index:6; --t:11s; --d:-4s; --a:6cqw}
+
+  .back{position:absolute; z-index:8; left:8cqw; top:15.5cqw; width:12.6cqw; height:12.6cqw; padding:0; border-radius:50%;
+    background:var(--paper); border:var(--line) solid var(--ink); display:grid; place-items:center; transition:transform .3s var(--bouncy)}
+  .back img{height:4.4cqw; transform:rotate(-90deg); filter:invert(1)}
+  .back:active{transform:scale(.9)}
+
+  .view{position:absolute; inset:0; z-index:5; display:flex; flex-direction:column; align-items:center}
+
+  /* Loading: the checklist builds while the scores are "worked out". */
+  .loading{z-index:7; padding:31cqw 9cqw 0; transition:opacity .35s ease, transform .5s var(--soft)}
+  body[data-stage="profile"] .loading{opacity:0; transform:translateY(-8cqw); pointer-events:none}
+  .ltitle{margin:0 0 6cqw; font-size:7.6cqw; line-height:.95; letter-spacing:-.05em; text-align:center}
+  .steps{list-style:none; margin:0; padding:0; width:100%; display:flex; flex-direction:column; gap:2.8cqw}
+  .step{display:flex; align-items:center; gap:3cqw; height:14cqw; padding:0 3cqw 0 2.4cqw; background:var(--paper);
+    border:var(--line) solid var(--ink); border-radius:7cqw; font-size:4.2cqw; letter-spacing:-.02em;
+    opacity:0; transform:translateY(5cqw) scale(.94); transition:opacity .25s ease, transform .55s var(--bouncy)}
+  .step.on{opacity:1; transform:none}
+  .ico{flex:none; width:9.5cqw; height:9.5cqw; display:flex; align-items:center; justify-content:center}
+  .ico img,.ico svg{max-width:100%; max-height:100%}
+  .ico.two img{width:6.6cqw; height:6.6cqw}
+  .ico.two img+img{margin-left:-2.2cqw}
+  .step .txt{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .state{flex:none; width:6.4cqw; height:6.4cqw; border-radius:50%; border:var(--line) dashed var(--ink);
+    display:grid; place-items:center; animation:spin 1.4s linear infinite}
+  .state svg{width:72%; opacity:0}
+  .step.done .state{border-style:solid; background:var(--ink); animation:pop .45s var(--bouncy)}
+  .step.done .state svg{opacity:1}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pop{from{transform:scale(.4)} to{transform:scale(1)}}
+
+  /* Profile: ProfileScreen.swift at Figma px / 1457 = cqw. */
+  .profile{padding-top:24.7cqw; pointer-events:none}
+  body[data-stage="profile"] .profile{pointer-events:auto}
+  .profile > *{opacity:0; transform:translateY(5cqw); transition:opacity .4s ease, transform .75s var(--soft)}
+  body[data-stage="profile"] .profile > *{opacity:1; transform:none}
+  body[data-stage="profile"] .profile > :nth-child(2){transition-delay:.06s}
+  body[data-stage="profile"] .profile > :nth-child(3){transition-delay:.14s}
+  body[data-stage="profile"] .profile > :nth-child(4){transition-delay:.22s}
+  body[data-stage="profile"] .profile > :nth-child(5){transition-delay:.3s}
+  .photo{position:relative; width:75.4cqw; aspect-ratio:1; border-radius:9.5cqw; border:var(--line) solid var(--ink);
+    background:var(--paper); overflow:hidden; display:grid; place-items:center}
+  .initials{font-weight:500; font-size:27cqw; letter-spacing:-.02em}
+  .photo img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:grayscale(1); opacity:0; transition:opacity .25s}
+  .photo img.ok{opacity:1}
+  .ident{width:100%; margin-top:4.8cqw; padding:0 8cqw; text-align:center; color:var(--paper)}
+  .handle{margin:0; font-size:9.7cqw; line-height:1.1; letter-spacing:-.05em; white-space:nowrap}
+  .rank{margin:1.2cqw 0 0; font-size:max(10px,2.96cqw)}
+  /* Scores never show on the web: blurred, digits rolling underneath, a lock on top. */
+  .scores{display:flex; flex-direction:column; align-items:center; gap:3cqw; margin-top:4.1cqw; text-decoration:none}
+  .vals{display:flex; gap:6.1cqw}
+  .scores .score img{filter:blur(.35cqw)}
+  .scores .score i{filter:blur(1.25cqw)}
+  .lock{display:flex; align-items:center; gap:1.4cqw;
+    white-space:nowrap; height:8.6cqw; padding:0 3.4cqw; background:var(--paper); border:var(--line) solid var(--ink);
+    border-radius:99px; color:var(--ink); font-size:3.4cqw; letter-spacing:-.02em}
+  .lock svg{width:3.3cqw}
+  body[data-stage="profile"] .lock{animation:lockIn .6s var(--bouncy) .8s both}
+  @keyframes lockIn{from{transform:scale(.3); opacity:0} to{transform:none; opacity:1}}
+  .scores:active .lock{transform:scale(.92)}
+  .blur{display:inline-block; min-width:1.4em; filter:blur(.8cqw); font-variant-numeric:tabular-nums}
+  .claim.nudge{animation:nudge .55s var(--bouncy)}
+  @keyframes nudge{35%{transform:scale(1.07)} 70%{transform:scale(.98)}}
+  .score{display:flex; align-items:flex-end; gap:2.2cqw; color:var(--paper); font-size:6.93cqw; line-height:.9;
+    letter-spacing:-.05em; font-variant-numeric:tabular-nums}
+  .score i{font-style:normal}
+  .score img{height:9.65cqw; width:auto}
+  .note{margin:3.6cqw 0 0; width:78cqw; text-align:center; color:var(--paper); font-size:max(11px,3.2cqw); line-height:1.3}
+  .claim{margin-top:4.6cqw; width:82cqw; height:13.7cqw; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--paper); border:var(--line) solid var(--ink); border-radius:6.7cqw; color:var(--ink); text-decoration:none}
+  .claim b{font-weight:400; font-size:4.4cqw; line-height:1.1; letter-spacing:-.03em}
+  .claim small{font-size:max(9px,2.75cqw)}
+  .claim:active{transform:scale(.96) !important}
+
+  /* The app's tab bar (TabBar.swift), with the Board tab picked. Decoration only. */
+  .tabs{position:absolute; z-index:7; left:0; right:0; bottom:-6cqw; display:flex; justify-content:space-around;
+    padding:4.1cqw 3.4cqw 10.1cqw; background:var(--red); border:var(--line) solid var(--ink); border-radius:6.7cqw 6.7cqw 0 0}
+  .tabs i{width:17.2cqw; height:17.2cqw; border-radius:50%; background:var(--ink); border:var(--line) solid var(--ink);
+    display:grid; place-items:center}
+  .tabs i.sel{background:var(--paper); transform:scale(1.06)}
+  .tabs .t-splat{width:10.3cqw; filter:brightness(0)}
+  .tabs svg{width:7.2cqw}
+  .tabs .t-flame{height:7.4cqw}
+  .tabs .t-person{height:8cqw; filter:invert(1)}
+
+  .aside{width:min(360px,100%); opacity:0; transform:translateY(16px); transition:opacity .3s ease, transform .5s var(--soft)}
+  body[data-stage="profile"] .aside{opacity:1; transform:none; transition-delay:.45s}
+  .aside h2{margin:0; font-weight:400; font-size:clamp(36px,3.6vw,54px); line-height:.9; letter-spacing:-.05em; overflow-wrap:anywhere}
+  .aside p{margin:18px 0 0; font-size:18px; line-height:1.35}
+  .again{display:block; margin-top:16px; height:40px; padding:0 18px; background:var(--paper); border:var(--line) solid var(--ink);
+    border-radius:99px; font-size:15px; transition:transform .3s var(--bouncy)}
+  .again:active{transform:scale(.94)}
+
+  /* ---------- Phones and narrow windows ---------- */
+  @media (max-width:820px), (orientation:portrait){
+    .c1{width:74vw; left:-28vw; top:-3svh}
+    .c2{width:22vw; right:4vw; top:15svh}
+    .c3{width:52vw; left:-20vw; bottom:9svh}
+    .c4{width:60vw; right:-24vw; bottom:-4svh}
+    .result{flex-direction:column; justify-content:flex-start; gap:32px; padding:16px 16px 56px}
+    .phone{--P:min(88vw,380px,calc((100svh - 32px) / 2.019))}
+    .aside{display:flex; flex-direction:column; align-items:center; text-align:center}
+  }
+  @media (max-height:640px) and (orientation:landscape){
+    h1{font-size:clamp(40px,6vw,72px)} .prompt{margin-top:24px} .store{margin-top:18px} .by{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body data-stage="home">
+
+  <div class="sky" aria-hidden="true">
+    <div class="cloud c1"><img src="assets/artCloudLarge.svg" alt=""></div>
+    <div class="cloud c2"><img src="assets/artCloudSmall.svg" alt=""></div>
+    <div class="cloud c3"><img src="assets/artCloudWide.svg" alt=""></div>
+    <div class="cloud c4"><img src="assets/artCloudLow.svg" alt=""></div>
+  </div>
+
+  <header class="top"><img src="assets/rpLogo.svg" alt="Rotten Potatoes"></header>
+
+  <main class="hero">
+    <p class="tag">Judge not, lest ye be judged.</p>
+    <h1>Are you on the list?</h1>
+
+    <form class="prompt" id="prompt" novalidate>
+      <label class="field">
+        <span class="at">@</span>
+        <input id="handle" type="text" placeholder="yourhandle" aria-label="Your Instagram or TikTok handle"
+               autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="60">
+      </label>
+      <div class="row">
+        <span class="hint"><span class="pair"><img src="assets/iconInstagram.svg" alt=""><img src="assets/iconTikTok.svg" alt=""></span>Instagram or TikTok</span>
+        <button class="go" type="submit" aria-label="Check my score"><img src="assets/iconChevronDouble.svg" alt=""></button>
+      </div>
+    </form>
+
+    <a class="store" data-store aria-label="Download on the App Store">
+      <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.090 3.792 3.039 1.520-.065 2.090-.987 3.935-.987 1.831 0 2.350.987 3.960.948 1.637-.026 2.676-1.480 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.220-4.857-.026-3.040 2.480-4.494 2.597-4.559-1.429-2.090-3.623-2.324-4.390-2.376-2-.156-3.675 1.090-4.610 1.090zM15.530 3.830c.843-1.012 1.400-2.427 1.245-3.830-1.207.052-2.662.805-3.532 1.818-.780.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+      <span><small>Download on the</small><b>App Store</b></span>
+    </a>
+  </main>
+
+  <footer class="foot">
+    <p class="by">A Social Experiment by <a href="https://www.instagram.com/rottenpotatoesstl/" target="_blank" rel="noopener" aria-label="Dumpster Fire Industries on Instagram (@rottenpotatoesstl)"><img src="assets/dfiLogo.svg" alt="Dumpster Fire Industries"></a></p>
+    <nav class="links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="mailto:rottenpotatoesstl@gmail.com">Contact</a></nav>
+  </footer>
+
+  <section class="result" aria-live="polite">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div><div class="island"></div>
+        <div class="sc big"><img src="assets/artCloudLarge.svg" alt=""></div>
+        <div class="sc small"><img src="assets/artCloudSmall.svg" alt=""></div>
+        <button class="back" id="back" type="button" aria-label="Check another handle"><img src="assets/iconChevronDouble.svg" alt=""></button>
+
+        <div class="view loading" aria-label="Building your estimate">
+          <p class="ltitle">Sizing you up…</p>
+          <ol class="steps" id="steps">
+            <li class="step">
+              <span class="ico"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20"/><circle cx="18" cy="18" r="6.5" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M23 23l5 5" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></span>
+              <span class="txt" id="findText">Finding you</span><i class="state"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+            </li>
+            <li class="step">
+              <span class="ico two"><img src="assets/iconInstagram.svg" alt=""><img src="assets/iconTikTok.svg" alt=""></span>
+              <span class="txt">Pulling your social data</span><i class="state"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+            </li>
+            <li class="step">
+              <span class="ico"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20"/><path d="M13 27v-6M20 27V13M27 27v-9" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg></span>
+              <span class="txt">Running the analytics</span><i class="state"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+            </li>
+            <li class="step">
+              <span class="ico"><img src="assets/iconPotato.svg" alt=""></span>
+              <span class="txt">Building your Spud Score</span><i class="state"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+            </li>
+            <li class="step">
+              <span class="ico"><img src="assets/iconFries.svg" alt=""></span>
+              <span class="txt">Building your Social Score</span><i class="state"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+            </li>
+          </ol>
+        </div>
+
+        <div class="view profile">
+          <div class="photo"><span class="initials" id="initials"></span><img id="photoImg" alt="" referrerpolicy="no-referrer"></div>
+          <div class="ident">
+            <p class="handle" id="phandle"></p>
+            <p class="rank" id="prank"></p>
+          </div>
+          <a class="scores" data-store aria-label="Your Spud Score and Social Score are locked. Claim your profile in the app to see them.">
+            <span class="vals" aria-hidden="true">
+              <span class="score"><img src="assets/iconPotato.svg" alt=""><i>87%</i></span>
+              <span class="score"><img src="assets/iconFries.svg" alt=""><i>42%</i></span>
+            </span>
+            <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="11.5" rx="2.6"/><path d="M8 10V7.4a4 4 0 0 1 8 0V10" fill="none" stroke="#000" stroke-width="2.4"/></svg>Claim to see</span>
+          </a>
+          <p class="note" id="note">Your scores are in. Claim your profile in the app to see them.</p>
+          <a class="claim" id="claim" data-store><b>Claim Profile</b><small>Download the app to see your scores</small></a>
+        </div>
+
+        <div class="tabs" aria-hidden="true">
+          <i class="sel"><img class="t-splat" src="assets/iconSplat.svg" alt=""></i>
+          <i><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="#fff" stroke-width="3"/><path d="M15 15l5 5" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></i>
+          <i><img class="t-flame" src="assets/iconHotStreakBody.svg" alt=""></i>
+          <i><img class="t-person" src="assets/iconPerson.svg" alt=""></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="aside">
+      <h2 id="ahead">Claim your profile.</h2>
+      <p id="abody">Download the app and claim your profile to see your Spud Score and Social Score.</p>
+      <a class="store" data-store aria-label="Download on the App Store">
+        <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.090 3.792 3.039 1.520-.065 2.090-.987 3.935-.987 1.831 0 2.350.987 3.960.948 1.637-.026 2.676-1.480 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.220-4.857-.026-3.040 2.480-4.494 2.597-4.559-1.429-2.090-3.623-2.324-4.390-2.376-2-.156-3.675 1.090-4.610 1.090zM15.530 3.830c.843-1.012 1.400-2.427 1.245-3.830-1.207.052-2.662.805-3.532 1.818-.780.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+        <span><small>Download on the</small><b>App Store</b></span>
+      </a>
+      <button class="again" id="again" type="button">Check another handle</button>
+    </div>
+  </section>
+
+<script>
+  // Swap in the real listing once the app is live.
+  // The App Store listing. Leave it empty to turn every download button back into "Coming soon".
+  var APP_STORE_URL = "https://apps.apple.com/us/app/rotten-potatoes/id6828552616";
+
+  var $ = function (s) { return document.querySelector(s); };
+  var body = document.body;
+  var form = $('#prompt');
+  var input = $('#handle');
+  var steps = [].slice.call(document.querySelectorAll('.step'));
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = matchMedia('(pointer: fine)').matches;
+  var timers = [];
+  var current = null;
+
+  document.querySelectorAll('[data-store]').forEach(function (a) {
+    if (APP_STORE_URL) { a.href = APP_STORE_URL; return; }
+    a.classList.add('soon');
+    a.removeAttribute('href');
+    if (a.classList.contains('store')) {
+      a.querySelector('small').textContent = 'Coming soon to the';
+      a.setAttribute('aria-label', 'Coming soon to the App Store');
+    }
+  });
+  if (!APP_STORE_URL) {
+    $('#claim small').textContent = 'Coming soon to the App Store';
+  }
+  if (finePointer) input.focus();
+  form.addEventListener('click', function () { input.focus(); });
+  // The box already shows the @, so a typed one is dropped.
+  input.addEventListener('input', function () { if (input.value.charAt(0) === '@') input.value = input.value.replace(/^@+/, ''); });
+
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+  // Accepts "name", "@name", or a pasted profile link.
+  function clean(v) {
+    v = v.trim().replace(/[?#].*$/, '');
+    if (v.indexOf('/') > -1) { var parts = v.split('/').filter(Boolean); v = parts[parts.length - 1] || ''; }
+    return v.replace(/^@+/, '').replace(/[^A-Za-z0-9._]/g, '').toLowerCase().slice(0, 30);
+  }
+
+  // The board lives in the app's Supabase project. This is the app's publishable key: it only
+  // reads what the app already shows publicly.
+  var SUPABASE_URL = 'https://flzsfavfllkipoepbjtb.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_mVL0GgMRMYOTwumotrW_rw_g18opzcm';
+  var rollTimer = null;
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var h = clean(input.value);
+    if (!h) {
+      form.classList.remove('nope'); void form.offsetWidth; form.classList.add('nope');
+      input.focus();
+      return;
+    }
+    run(h);
+  });
+
+  function run(h) {
+    stop();
+    current = h;
+    show(h, null);
+    lookup(h).then(function (found) { if (current === h) show(h, found); });
+    input.blur();
+    body.dataset.stage = 'loading';
+
+    var start = reduce ? 50 : 750, gap = reduce ? 60 : 820;
+    steps.forEach(function (li, i) {
+      later(function () { li.classList.add('on'); }, start + i * gap);
+      later(function () { li.classList.add('done'); }, start + i * gap + gap - 140);
+    });
+    later(function () { body.dataset.stage = 'profile'; roll(); }, start + steps.length * gap + (reduce ? 0 : 350));
+    later(function () { $('#claim').classList.add('nudge'); }, start + steps.length * gap + 2200);
+  }
+
+  // Is this handle on the board? If so, the profile photo the app already saved for it
+  // (a claimed photo first, then Instagram, then TikTok).
+  function lookup(h) {
+    var url = SUPABASE_URL + '/rest/v1/accounts?select=platform,photo_url,creators!inner(claimed_photo_url)&handle=eq.' + encodeURIComponent(h);
+    return fetch(url, { headers: { apikey: SUPABASE_KEY } })
+      .then(function (r) { if (!r.ok) throw new Error('lookup ' + r.status); return r.json(); })
+      .then(function (rows) {
+        rows.sort(function (a, b) { return (a.platform === 'instagram' ? 0 : 1) - (b.platform === 'instagram' ? 0 : 1); });
+        var photos = [];
+        rows.forEach(function (r) { if (r.creators && r.creators.claimed_photo_url) photos.push(r.creators.claimed_photo_url); });
+        rows.forEach(function (r) { if (r.photo_url) photos.push(r.photo_url); });
+        return { listed: rows.length > 0, photos: photos };
+      })
+      .catch(function () { return { listed: null, photos: [] }; });
+  }
+
+  // found: null while looking, then { listed: true | false | null (lookup failed), photos }.
+  function show(h, found) {
+    var listed = found ? found.listed : null;
+    $('#findText').textContent = 'Finding @' + h;
+    var handle = $('#phandle');
+    handle.textContent = '@' + h;
+    // Long handles shrink to fit, like the app's minimumScaleFactor.
+    handle.style.fontSize = 'min(9.7cqw, ' + (158 / (h.length + 1)).toFixed(2) + 'cqw)';
+
+    var rank = $('#prank');
+    if (listed === false) {
+      rank.textContent = 'Not ranked yet';
+    } else {
+      rank.innerHTML = '#<span class="blur">' + (10 + Math.floor(Math.random() * 90)) + '</span> in St. Louis';
+    }
+
+    var head = $('#ahead'), copy = $('#abody');
+    $('#note').textContent = listed === false
+      ? 'Claim your profile in the app to get your scores.'
+      : 'Your scores are in. Claim your profile in the app to see them.';
+    if (listed === true) {
+      head.textContent = '@' + h + ', you’re on the list.';
+      copy.textContent = 'Your Spud Score and Social Score are ready. Download the app and claim your profile to see where you rank in St. Louis.';
+    } else if (listed === false) {
+      head.textContent = '@' + h + ', you’re not on the list yet.';
+      copy.textContent = 'Download the app and claim your profile to get your Spud Score and Social Score.';
+    } else {
+      head.textContent = '@' + h + ', claim your profile.';
+      copy.textContent = 'Download the app and claim your profile to see your Spud Score and Social Score.';
+    }
+
+    if (!found) {
+      $('#initials').textContent = (h.replace(/[^a-z0-9]/g, '').slice(0, 2) || '?').toUpperCase();
+      $('#photoImg').classList.remove('ok');
+      $('#photoImg').removeAttribute('src');
+      return;
+    }
+    var photos = found.photos.slice();
+    // Not on the board: try their public TikTok photo. unavatar's Instagram lookup is paid only.
+    if (!photos.length) photos.push('https://unavatar.io/tiktok/' + encodeURIComponent(h) + '?fallback=false');
+    loadPhoto(h, photos);
+  }
+
+  // Black and white like the app; initials stay if nothing loads.
+  function loadPhoto(h, sources) {
+    var img = $('#photoImg'), i = 0;
+    img.onload = function () { if (current === h) img.classList.add('ok'); };
+    img.onerror = function () { i++; if (current === h && i < sources.length) img.src = sources[i]; };
+    img.src = sources[0];
+  }
+
+  // The blurred numbers never settle, so there's nothing to read through the blur.
+  function roll() {
+    clearInterval(rollTimer);
+    if (reduce) return;
+    rollTimer = setInterval(function () {
+      document.querySelectorAll('.score i').forEach(function (el) { el.textContent = (10 + Math.floor(Math.random() * 90)) + '%'; });
+      var r = document.querySelector('#prank .blur');
+      if (r) r.textContent = 1 + Math.floor(Math.random() * 240);
+    }, 110);
+  }
+
+  function stop() {
+    timers.forEach(clearTimeout); timers = [];
+    clearInterval(rollTimer);
+    $('#claim').classList.remove('nudge');
+    steps.forEach(function (li) { li.classList.remove('on', 'done'); });
+  }
+
+  function reset() {
+    stop();
+    current = null;
+    body.dataset.stage = 'home';
+    $('.result').scrollTop = 0;
+    if (finePointer) setTimeout(function () { input.focus(); input.select(); }, 450);
+  }
+
+  $('#back').addEventListener('click', reset);
+  $('#again').addEventListener('click', reset);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && body.dataset.stage !== 'home') reset(); });
+</script>
+</body>
+</html>
